@@ -1,0 +1,14 @@
+Metadata-Version: 2.1
+Name: git-smash
+Version: 0.0.0
+Summary: smash multiple feature branches into an ephemeral branch
+Home-page: https://github.com/openslate/git-smash
+Author: OpenSlate
+Author-email: code@openslate.com
+License: UNKNOWN
+Description: # Git Smash
+        
+        A command line tool to manage smashing multiple feature branches into an ephemeral throw-away branch.
+        
+Platform: UNKNOWN
+Description-Content-Type: text/markdown

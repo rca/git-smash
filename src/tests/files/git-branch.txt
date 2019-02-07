@@ -1,0 +1,15 @@
+* env/dev-fb-provider
+  master
+  remotes/origin/env/dev-fb-provider
+  remotes/origin/env/staging-fb-provider
+  remotes/origin/epic/blocklist-management
+  remotes/origin/master
+  remotes/rca/blocklist-module-cleanup
+  remotes/rca/bugfix/2290-fb-provider-api-shou
+  remotes/rca/env/dev-fb-provider
+  remotes/rca/feature/2168-w4-accessing-blockl
+  remotes/rca/master
+  remotes/rca/url-refactor
+  remotes/roomnoise/feature/2194-blocklists
+  remotes/roomnoise/feature/filter-bms-and-ad-accounts
+  remotes/roomnoise/master
