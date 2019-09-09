@@ -134,6 +134,13 @@ class Commit:
         else:
             print(f'could not parse {self.message}')
 
+    @property
+    def merge_commits(self):
+        return run_command(f'{GIT_LOG_COMMAND} --pretty=%P -n 1 {self.rev}').split()
+
+    @property
+    def merge_rhs(self):
+        return self.merge_commits[-1]
 
 def get_branch_manager():
     return BranchManager.from_git_output(run_command(GIT_BRANCH_COMMAND))
