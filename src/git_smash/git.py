@@ -13,7 +13,13 @@ GIT_BRANCH_COMMAND = f'{GIT_COMMAND} branch --no-color --all'
 GIT_LOG_COMMAND = f'{GIT_COMMAND} log --no-decorate --no-color --pretty=oneline --merges'
 GIT_MERGE_COMMAND = f'{GIT_COMMAND} merge --no-edit'
 
-MERGE_MESSAGE_RE = re.compile(r'Merge (:?remote-tracking )?branch \'(?P<merge_branch>[^\']*)\'( of.*)? into (?P<target_branch>.*)')
+MERGE_MESSAGE_RE = re.compile((
+    r'(?P<decoration>\(.*\) )?'
+    r'('
+    r'Merge (:?remote-tracking )?branch \'(?P<merge_branch>[^\']*)\'( of.*)? into (?P<target_branch>.*)' \
+    r'|Merge pull request .*? from (?P<merge_branch2>.*)'
+    r')'
+))
 
 
 class Branch:
