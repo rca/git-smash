@@ -1,3 +1,0 @@
-[console_scripts]
-git-smash = git_smash.entrypoints:git_smash
-
