@@ -142,6 +142,14 @@ class Commit:
     def merge_rhs(self):
         return self.merge_commits[-1]
 
+
+def create_branch(name: str, rev: str) -> Branch:
+    run_command(f'git checkout -b {name} {rev}')
+    run_command('git checkout -')
+
+    return Branch(name)
+
+
 def get_branch_manager():
     return BranchManager.from_git_output(run_command(GIT_BRANCH_COMMAND))
 
