@@ -130,7 +130,7 @@ class Commit:
     def merge_branch(self):
         matches = MERGE_MESSAGE_RE.match(self.message)
         if matches:
-            return matches.group('merge_branch')
+            return matches.group('merge_branch') or matches.group('merge_branch2')
         else:
             print(f'could not parse {self.message}')
 
