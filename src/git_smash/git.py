@@ -170,7 +170,11 @@ def get_simplified_merge_commits(commits: Iterable[Commit]):
     commits_by_message = OrderedDict()
 
     for commit in commits:
-        commits_by_message.setdefault(commit.merge_branch, commit)
+        branch_name = commit.merge_branch
+        if branch_name not in commits_by_message:
+            print(f'add branch_name={branch_name}: {commit}')
+
+            commits_by_message[branch_name] = commit
 
     return commits_by_message.values()
 
