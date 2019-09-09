@@ -70,7 +70,10 @@ class BranchManager:
         matching = []
 
         for item in self.branches:
-            if item.name.endswith(name):
+            # prefix with a slash to ensure that we are comparing the same branch name
+            # in one case there's a branch named `remotes/origin/revert-204-bugfix/os-1088`
+            # that was chosen over `remotes/rubberviscous/bugfix/os-1088` because of the missing `/` prefix
+            if item.name.endswith(f'/{name}'):
                 matching.append(item)
 
         if len(matching) < 2:
