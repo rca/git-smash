@@ -53,3 +53,10 @@ class GitTestCase(TestCase):
         commit = git.Commit.from_log(log)[0]
 
         self.assertEquals('remotes/rca/feature/2168-w4-accessing-blockl', commit.merge_branch)
+
+    def test_get_merge_branch_name_from_pr(self, *mocks):
+        log = "11e189e57d1e0bb24e67f94bdc17883d0cb94744 (master) Merge pull request #14 from rca/feature/add-staging-profile"
+
+        commit = git.Commit.from_log(log)[0]
+
+        self.assertEquals('rca/feature/add-staging-profile', commit.merge_branch)
