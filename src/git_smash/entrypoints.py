@@ -1,4 +1,6 @@
+import argparse
 import sh
+import sys
 
 from collections import OrderedDict
 
@@ -8,66 +10,109 @@ from .utils import run_command
 SH_ERROR_1 = getattr(sh, 'ErrorReturnCode_1')
 
 
-def git_smash(base_branch: str = 'origin/master'):
-    # get the revison that is common with origin/master
-    base_rev = run_command(f'git merge-base HEAD {base_branch}')
+def git_smash():
+    parser = argparse.ArgumentParser()
 
-    # get the master revison
-    master_rev = run_command(f'git rev-list {base_branch} --max-count 1')
+    parser.add_argument('--reset-base', action='store_true', help='reset the branch to the base branch')
+    parser.add_argument('action', help='the action to take')
 
-    if base_rev != master_rev:
-        # TODO: rebase on base branch based on optional arg
-        print(f'WARNING: this branch is not on top of {base_branch}')
+    args = parser.parse_args()
 
-    print(f'looking for merge commits until {base_rev}')
+    smash = Smash(args)
 
-    merge_commits = git.get_merge_commits(base_rev)
+    fn = getattr(smash, args.action, None)
+    if not fn:
+        sys.exit(f'ERROR: action {args.action} not defined')
 
-    for commit in merge_commits:
-        print(commit)
+    sys.exit(fn())
 
-    print('\n\nsimplify merges\n\n')
 
-    simplified = git.get_simplified_merge_commits(merge_commits)
+class Smash:
+    def __init__(self, args, base_branch: str = 'origin/master'):
+        self.args = args
+        self.base_branch = base_branch
 
-    for commit in simplified:
-        print(commit)
+    @property
+    def base_rev(self) -> str:
+        """Returns the revison that is common with origin/master"""
+        return run_command(f'git merge-base HEAD {self.base_branch}')
 
-    print('\n\nfind current commits\n\n')
+    def get_merges(self, simplify: bool = True) -> list:
+        print(f'looking for merge commits until {self.base_rev}')
 
-    branch_manager = git.get_branch_manager()
+        merge_commits = git.get_merge_commits(self.base_rev)
 
-    current_branch = branch_manager.current_branch
+        for commit in merge_commits:
+            print(commit)
 
-    branches_to_merge = []
+        if not simplify:
+            return merge_commits
 
-    for commit in simplified:
-        if commit.merge_branch == current_branch.name:
-            print(f'{commit.merge_branch} merging self; skipping')
+        print('\n\nsimplify merges\n\n')
 
-            continue
+        simplified = git.get_simplified_merge_commits(merge_commits)
 
-        branches = branch_manager.get_matching_branches(commit.merge_branch, best=True)
-        assert len(branches) < 2
+        # for commit in simplified:
+        #     print(commit)
+        #
+        return simplified
 
-        if not branches:
-            print(f'skipping {commit}, no remote branch found')
-            continue
+    def list(self):
+        self.get_merges()
 
-        branches_to_merge.append(branches[0])
+    @property
+    def master_rev(self):
+        """Returns the master revison"""
+        return run_command(f'git rev-list {self.base_branch} --max-count 1')
 
-    # apply the branches backwards
-    branches_to_merge.reverse()
+    def simplify(self):
+        on_base = self.base_rev == self.master_rev
+        if not on_base:
+            # TODO: rebase on base branch based on optional arg
+            print(f'WARNING: this branch is not on top of {self.base_branch}')
 
-    print(f'branches_to_merge={branches_to_merge}')
+        simplified = self.get_merges()
 
-    run_command(f'git checkout -b smash/{current_branch} {base_branch}')
+        print('\n\nfind current commits...')
 
-    for branch in branches_to_merge:
-        try:
-            run_command(f'{git.GIT_MERGE_COMMAND} {branch.name}')
-        except SH_ERROR_1 as exc:
-            print(f'could not merge {branch} automatically.  launching a subshell so you can resove the conflict')
-            print(f'once the conflict is resolved exit the shell')
+        branch_manager = git.get_branch_manager()
 
-            sh.bash('-i', _fg=True)
+        current_branch = branch_manager.current_branch
+
+        branches_to_merge = []
+
+        for commit in simplified:
+            if commit.merge_branch == current_branch.name:
+                print(f'{commit.merge_branch} merging self; skipping')
+
+                continue
+
+            branches = branch_manager.get_matching_branches(commit.merge_branch, best=True)
+            assert len(branches) < 2
+
+            if not branches:
+                print(f'WARNING: Cannot find commit on any remote, making a temp branch: {commit}')
+
+                branches.append(git.create_branch(f'smash/{commit.merge_branch}', commit.merge_rhs))
+
+            branches_to_merge.append(branches[0])
+
+        # apply the branches backwards
+        branches_to_merge.reverse()
+
+        branches_s = '\n'.join([str(x) for x in branches_to_merge])
+        print(f'\n\nbranches to merge\n\n{branches_s}')
+
+        base = self.base_branch
+
+        run_command(f'git checkout -b smash/{current_branch} {base}')
+
+        for branch in branches_to_merge:
+            try:
+                print(f'merging {branch.name} ...')
+                run_command(f'{git.GIT_MERGE_COMMAND} {branch.name}')
+            except SH_ERROR_1 as exc:
+                print(f'could not merge {branch} automatically.  launching a subshell so you can resove the conflict')
+                print(f'once the conflict is resolved exit the shell')
+
+                sh.bash('-i', _fg=True)
