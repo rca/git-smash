@@ -35,6 +35,12 @@ class Branch:
     def __str__(self):
         return str(self.name)
 
+    @property
+    def commit(self):
+        """Returns the commit for this branch"""
+        return Commit(run_command(f'git rev-list {self.name} --max-count 1').strip(), None)
+
+
 
 class BranchManager:
     def __init__(self):
