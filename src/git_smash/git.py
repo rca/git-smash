@@ -182,7 +182,7 @@ def get_branch_manager():
     return BranchManager.from_git_output(run_command(GIT_BRANCH_COMMAND))
 
 
-def get_merge_commits(until: str, drop: list = None, loglevel: str = 'info') -> list:
+def get_merge_commits(until: str, drop: Iterable[str] = None, loglevel: str = 'debug') -> list:
     """
     Returns merge commits until the given revision is found
     """
@@ -207,15 +207,16 @@ def get_merge_commits(until: str, drop: list = None, loglevel: str = 'info') -> 
     return merge_commits
 
 
-def get_simplified_merge_commits(commits: Iterable[Commit]):
+def get_simplified_merge_commits(commits: Iterable[Commit], loglevel: str = 'debug'):
     logger = logging.getLogger(f'{__name__}')
+    logger_fn = getattr(logger, loglevel)
 
     commits_by_message = OrderedDict()
 
     for commit in commits:
         branch_name = commit.merge_branch
         if branch_name not in commits_by_message:
-            logger.info(f'add branch_name={branch_name} @ {commit.rev}')
+            logger_fn(f'add branch_name={branch_name} @ {commit.rev}')
 
             commits_by_message[branch_name] = commit
 

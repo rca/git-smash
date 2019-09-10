@@ -66,18 +66,22 @@ class Smash:
     def get_merges(self, simplify: bool = True) -> list:
         self.logger.info(f'looking for merge commits until {self.base_rev}')
 
-        loglevel = 'info'
-        if simplify:
-            loglevel = 'debug'
+        merges = git.get_merge_commits(self.base_rev, drop=self.args.drop)
+        self.logger.debug('all merges:')
+        for merge in merges:
+            self.logger.debug(f'\t{merge}')
 
-        merges = git.get_merge_commits(self.base_rev, drop=self.args.drop, loglevel=loglevel)
         if simplify:
             merges = git.get_simplified_merge_commits(merges)
 
         return merges
 
     def list(self):
-        self.get_merges()
+        self.logger.info('merges:')
+
+        merges = self.get_merges()
+        for merge in merges:
+            self.logger.info(f'\t{merge}')
 
     @property
     def master_rev(self):
