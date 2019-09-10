@@ -55,9 +55,9 @@ class Smash:
     def get_merges(self, simplify: bool = True) -> list:
         self.logger.info(f'looking for merge commits until {self.base_rev}')
 
-        loglevel = 'debug'
+        loglevel = 'info'
         if simplify:
-            loglevel = 'info'
+            loglevel = 'debug'
 
         merges = git.get_merge_commits(self.base_rev, drop=self.args.drop, loglevel=loglevel)
         if simplify:
