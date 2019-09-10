@@ -145,6 +145,10 @@ class Commit:
         return run_command(f'{GIT_LOG_COMMAND} --pretty=%P -n 1 {self.rev}').split()
 
     @property
+    def merge_lhs(self):
+        return self.merge_commits[0]
+
+    @property
     def merge_rhs(self):
         return self.merge_commits[-1]
 
