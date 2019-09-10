@@ -164,14 +164,23 @@ def get_branch_manager():
     return BranchManager.from_git_output(run_command(GIT_BRANCH_COMMAND))
 
 
-def get_merge_commits(until: str):
+def get_merge_commits(until: str, drop: list) -> list:
     """
     Returns merge commits until the given revision is found
     """
-    merge_commits = []
+    merge_commits_t = []
 
     git_log_command = f'{GIT_LOG_COMMAND} {until}..HEAD'
-    get_proc(git_log_command, _out=functools.partial(process_merge_line, merge_commits))
+    get_proc(git_log_command, _out=functools.partial(process_merge_line, merge_commits_t))
+
+    drop = drop or []
+    merge_commits = []
+    for commit in merge_commits_t:
+        if commit.merge_branch in drop:
+            print(f'dropping {commit}')
+            continue
+
+        merge_commits.append(commit)
 
     return merge_commits
 

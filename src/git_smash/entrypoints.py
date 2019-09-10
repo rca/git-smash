@@ -13,6 +13,7 @@ SH_ERROR_1 = getattr(sh, 'ErrorReturnCode_1')
 def git_smash():
     parser = argparse.ArgumentParser()
 
+    parser.add_argument('--drop', action='append', help='drop the given branches')
     parser.add_argument('--reset-base', action='store_true', help='reset the branch to the base branch')
     parser.add_argument('action', help='the action to take')
 
@@ -40,7 +41,7 @@ class Smash:
     def get_merges(self, simplify: bool = True) -> list:
         print(f'looking for merge commits until {self.base_rev}')
 
-        merge_commits = git.get_merge_commits(self.base_rev)
+        merge_commits = git.get_merge_commits(self.base_rev, drop=self.args.drop)
 
         for commit in merge_commits:
             print(commit)
