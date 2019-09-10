@@ -178,7 +178,7 @@ def get_simplified_merge_commits(commits: Iterable[Commit]):
     for commit in commits:
         branch_name = commit.merge_branch
         if branch_name not in commits_by_message:
-            print(f'add branch_name={branch_name}: {commit}')
+            print(f'add branch_name={branch_name}:\n\t{commit}')
 
             commits_by_message[branch_name] = commit
 
