@@ -116,6 +116,18 @@ class Smash:
         run_command(f'git reset --hard {base}')
 
         for branch in branches_to_merge:
+            # get the entire commit history and see if the rev about to be merged
+            # is already in the history
+            branch_commits = run_command(f'git rev-list HEAD').splitlines()
+            rev = branch.commit.rev
+
+            # print(f'branch={branch}, rev={rev}, {len(branch_commits)} branch_commits={branch_commits}')
+
+            if rev in branch_commits:
+                print(f'rev={rev} from {branch} already in commit history, skipping')
+
+                continue
+
             try:
                 print(f'merging {branch.name} ...')
                 run_command(f'{git.GIT_MERGE_COMMAND} {branch.name}')
