@@ -1,4 +1,5 @@
 import functools
+import logging
 import re
 
 from collections import OrderedDict
@@ -164,10 +165,13 @@ def get_branch_manager():
     return BranchManager.from_git_output(run_command(GIT_BRANCH_COMMAND))
 
 
-def get_merge_commits(until: str, drop: list) -> list:
+def get_merge_commits(until: str, drop: list = None, loglevel: str = 'info') -> list:
     """
     Returns merge commits until the given revision is found
     """
+    logger = logging.getLogger(f'{__name__}')
+    logger_fn = getattr(logger, loglevel)
+
     merge_commits_t = []
 
     git_log_command = f'{GIT_LOG_COMMAND} {until}..HEAD'
@@ -177,7 +181,7 @@ def get_merge_commits(until: str, drop: list) -> list:
     merge_commits = []
     for commit in merge_commits_t:
         if commit.merge_branch in drop:
-            print(f'dropping {commit}')
+            logger_fn(f'dropping {commit}')
             continue
 
         merge_commits.append(commit)
@@ -186,12 +190,14 @@ def get_merge_commits(until: str, drop: list) -> list:
 
 
 def get_simplified_merge_commits(commits: Iterable[Commit]):
+    logger = logging.getLogger(f'{__name__}')
+
     commits_by_message = OrderedDict()
 
     for commit in commits:
         branch_name = commit.merge_branch
         if branch_name not in commits_by_message:
-            print(f'add branch_name={branch_name}:\n\t{commit}')
+            logger.info(f'add branch_name={branch_name} @ {commit.rev}')
 
             commits_by_message[branch_name] = commit
 
