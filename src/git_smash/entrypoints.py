@@ -48,6 +48,17 @@ class Smash:
         """Returns the revison that is common with origin/master"""
         return run_command(f'git merge-base HEAD {self.base_branch}')
 
+    def clean(self):
+        """
+        Remove all smash/ branches
+        """
+        branch_manager = git.get_branch_manager()
+
+        for branch in branch_manager.get_matching_branches(re.compile(fr'^smash/')):
+            self.logger.info(f'remove {branch.info}')
+
+            run_command(f'git branch -D {branch.name}')
+
     @property
     def logger(self):
         return logging.getLogger(f'{__name__}.{self.__class__.__name__}')
