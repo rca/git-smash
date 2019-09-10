@@ -33,9 +33,7 @@ class Branch:
         self.current = current
 
     def __repr__(self):
-        current = '*' if self.current else ''
-
-        return f'<{self.__class__.__name__} {current}{self.name}>'
+        return f'<{self.__class__.__name__} {self.info}>'
 
     def __str__(self):
         return str(self.name)
@@ -45,6 +43,11 @@ class Branch:
         """Returns the commit for this branch"""
         return Commit(run_command(f'git rev-list {self.name} --max-count 1').strip(), None)
 
+    @property
+    def info(self):
+        current = '*' if self.current else ''
+
+        return f'{current}{self.name} @ {self.commit}'
 
 
 class BranchManager:
@@ -124,7 +127,9 @@ class Commit:
         return f'<{self.__class__.__name__} {self}>'
 
     def __str__(self):
-        return f'{self.rev} {self.message}'
+        message = f' {self.message}' if self.message else ''
+
+        return f'{self.rev}{message}'
 
     @classmethod
     def from_log(cls, content: str) -> 'Commit':
