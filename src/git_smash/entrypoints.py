@@ -103,9 +103,17 @@ class Smash:
         branches_s = '\n'.join([str(x) for x in branches_to_merge])
         print(f'\n\nbranches to merge\n\n{branches_s}')
 
+        backup_branch = f'smash/{current_branch}'
+        print(f'\n\nbacking up current branch to {backup_branch}')
+
+        run_command(f'git checkout -b {backup_branch}')
+
         base = self.base_branch
 
-        run_command(f'git checkout -b smash/{current_branch} {base}')
+        print(f'\n\nresetting to {base}')
+
+        run_command(f'git checkout -')
+        run_command(f'git reset --hard {base}')
 
         for branch in branches_to_merge:
             try:
