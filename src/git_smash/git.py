@@ -1,6 +1,7 @@
 import functools
 import logging
 import re
+import typing
 
 from collections import OrderedDict
 from typing import Iterable
@@ -21,6 +22,9 @@ MERGE_MESSAGE_RE = re.compile((
     r'|Merge pull request .*? from (?P<merge_branch2>.*)'
     r')'
 ))
+
+if typing.TYPE_CHECKING:
+    REGEX = type(re.compile('x'))
 
 
 class Branch:
@@ -66,12 +70,12 @@ class BranchManager:
 
         return manager
 
-    def get_matching_branches(self, name: str, best: bool = False) -> Iterable:
+    def get_matching_branches(self, regex: 'REGEX', best: bool = False) -> Iterable:
         """
         Returns a list of remote branches that match the given name
 
         Args:
-            name: the name of the branch to match
+            regex: a regular expression for the pattern to look for
             best: when True, only the best matching branch is returned
         """
         matching = []
@@ -80,18 +84,26 @@ class BranchManager:
             # prefix with a slash to ensure that we are comparing the same branch name
             # in one case there's a branch named `remotes/origin/revert-204-bugfix/os-1088`
             # that was chosen over `remotes/rubberviscous/bugfix/os-1088` because of the missing `/` prefix
-            if item.name.endswith(f'/{name}'):
+            if regex.search(item.name):
                 matching.append(item)
 
         if len(matching) < 2:
             return matching
 
         if best:
+            branch_len = 1e6  # there's no name a million chars long
+            best_branch = None
             for item in matching:
-                if '/' not in item.name:
-                    continue
+                _len = len(item.name)
+                if _len < branch_len:
+                    branch_len = _len
+                    best_branch = item
 
-                return [item]
+            return [best_branch]
+
+        # when best is selected, make sure at most one result is being returned
+        if best:
+            assert len(matching) < 2, f'{len(matching)}: {matching}'
 
         return matching
 
@@ -184,6 +196,7 @@ def get_merge_commits(until: str, drop: list = None, loglevel: str = 'info') -> 
             logger_fn(f'dropping {commit}')
             continue
 
+        logger_fn(f'found {commit.merge_branch} @ {commit.rev}')
         merge_commits.append(commit)
 
     return merge_commits

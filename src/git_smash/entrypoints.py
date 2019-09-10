@@ -1,5 +1,6 @@
 import argparse
 import logging
+import re
 import sh
 import sys
 
@@ -94,8 +95,7 @@ class Smash:
 
                 continue
 
-            branches = branch_manager.get_matching_branches(commit.merge_branch, best=True)
-            assert len(branches) < 2
+            branches = branch_manager.get_matching_branches(re.compile(fr'{commit.merge_branch}$'), best=True)
 
             if not branches:
                 self.logger.warning(f'cannot find commit on any remote, making a temp branch: {commit}')

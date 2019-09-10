@@ -1,3 +1,5 @@
+import re
+
 from unittest import TestCase, mock
 
 from git_smash import git
@@ -15,14 +17,49 @@ class BranchManagerTestCase(TestCase):
     def test_from_git_output(self, *mocks):
         manager = self._get_manager()
 
-        self.assertEquals(15, len(manager.branches))
+        self.assertEquals(16, len(manager.branches))
 
     def test_get_matching_branches(self, *mocks):
         manager = self._get_manager()
 
-        branches = manager.get_matching_branches('master')
+        branches = manager.get_matching_branches(re.compile('master$'))
 
         self.assertEquals(4, len(branches))
+
+    def test_get_best_branch_without_slash(self, *mocks):
+        """Local master would be the preferred branch"""
+        manager = self._get_manager()
+
+        branches = manager.get_matching_branches(re.compile('master$'), best=True)
+
+        self.assertEquals(1, len(branches))
+
+        branch = branches[0]
+        self.assertEqual('master', branch.name)
+
+    def test_get_matching_branches_prefer_local(self, *mocks):
+        manager = self._get_manager()
+
+        branches = manager.get_matching_branches(re.compile(r'env/dev-fb-provider$'), best=True)
+
+        self.assertEquals(1, len(branches), branches)
+
+        branch = branches[0]
+        self.assertEquals('env/dev-fb-provider', branch.name)
+
+    def test_get_matching_branches_match_full_name(self, *mocks):
+        """
+        ensure a branch that has a similar name, but prefixed with something else (e.g. revert-) isn't preferred
+        """
+        manager = self._get_manager()
+
+        branches = manager.get_matching_branches(re.compile(r'2168-w4-accessing-blockl$'), best=True)
+
+        self.assertEquals(1, len(branches), branches)
+
+        branch = branches[0]
+        self.assertEquals('remotes/rca/2168-w4-accessing-blockl', branch.name)
+
 
 
 class GitTestCase(TestCase):
