@@ -73,7 +73,7 @@ class Smash:
         """Returns the master revison"""
         return run_command(f'git rev-list {self.base_branch} --max-count 1')
 
-    def simplify(self):
+    def replay(self):
         on_base = self.base_rev == self.master_rev
         if not on_base:
             # TODO: rebase on base branch based on optional arg
