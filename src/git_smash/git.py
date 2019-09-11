@@ -55,7 +55,6 @@ class BranchManager:
         self.branches = []
 
     @property
-    @functools.lru_cache()
     def current_branch(self):
         for item in self.branches:
             if item.current:
