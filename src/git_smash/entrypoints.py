@@ -137,9 +137,11 @@ class Smash:
 
             branches = branch_manager.get_matching_branches(re.compile(fr'{commit.merge_branch}$'), best=True)
             if not branches:
-                self.logger.warning(f'cannot find commit on any remote, making a temp branch: {commit}')
+                branch = git.Branch(commit.merge_branch, commit=git.Commit(commit.merge_rhs, None))
 
-                branches.append(git.create_branch(f'smash/{commit.merge_branch}', commit.merge_rhs))
+                self.logger.warning(f'cannot find commit on any remote, making a temp branch: {branch}')
+
+                branches.append(branch)
 
             branches_to_merge.append((commit, branches[0]))
 
