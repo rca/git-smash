@@ -146,8 +146,8 @@ class Smash:
         # apply the branches backwards
         branches_to_merge.reverse()
 
-        branches_s = '\n'.join([str(x) for x in branches_to_merge])
-        self.logger.info(f'branches to merge: {branches_s}')
+        branches_s = '\n\t'.join([x.info for _, x in branches_to_merge])
+        self.logger.info(f'branches to merge:\n\t{branches_s}')
 
         backup_branch = f'smash/{current_branch}'
         self.logger.info(f'backing up current branch to {backup_branch}')
