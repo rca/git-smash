@@ -38,6 +38,11 @@ class Branch:
     def __str__(self):
         return str(self.name)
 
+    def checkout(self):
+        run_command(f'git checkout {self.name}')
+
+        self.current = True
+
     @property
     def commit(self):
         """Returns the commit for this branch"""
@@ -50,11 +55,29 @@ class Branch:
 
         return cls(name)
 
+    def delete(self):
+        run_command(f'git branch -D {self.name}')
+
     @property
     def info(self):
         current = '*' if self.current else ''
 
         return f'{current}{self.name} @ {self.commit}'
+
+    def reset_to(self, commit):
+        """Reset the branch to the given commit"""
+        self.switch(self.name)
+        run_command(f'git reset --hard {commit.rev}')
+        self.switch('-')
+
+    @classmethod
+    def switch(cls, name: str):
+        """Switch to the given branch"""
+        branch = cls(name)
+
+        branch.checkout()
+
+        return branch
 
 
 class BranchManager:
@@ -78,6 +101,9 @@ class BranchManager:
             manager.branches.append(Branch(line[2:], current=current))
 
         return manager
+
+    def get_branch(self, name: str):
+        return self.get_matching_branches(re.compile('^master$'), best=True)[0]
 
     def get_matching_branches(self, regex: 'REGEX', best: bool = False) -> Iterable:
         """
