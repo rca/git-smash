@@ -4,6 +4,7 @@ import re
 import typing
 
 from collections import OrderedDict
+from contextlib import contextmanager
 from typing import Iterable
 
 from . import errors
@@ -257,3 +258,43 @@ def process_merge_line(commits, line, stdin, process):
     Processes lines until the given commit is found
     """
     commits.append(Commit.from_log(line)[0])
+
+
+@contextmanager
+def temp_branch(name, commit):
+    """Sets the branch to the given commit hash
+
+    Will reset the branch back to its original commit if it existed or remove it when done
+    """
+    logger = logging.getLogger(__name__)
+
+    branch_manager = get_branch_manager()
+    current_branch = branch_manager.current_branch
+    original_commit = None
+
+    try:
+        branch = Branch.switch(name)
+    except sh.ErrorReturnCode:  # branch does not exist
+        branch = Branch.create(name, commit.rev)
+
+        logger.debug(f'created {branch}')
+    else:
+        original_commit = branch.commit
+        branch.reset_to(commit)
+
+        logger.debug(f'switched to {branch}, original_commit={original_commit}')
+
+    current_branch.checkout()
+
+    try:
+        yield branch
+    finally:
+        if original_commit:
+            logger.debug(f'resetting to {original_commit}')
+
+            branch.reset_to(original_commit)
+        else:
+            logger.debug(f'remove {branch}')
+
+            original_branch.checkout()
+            branch.delete()
