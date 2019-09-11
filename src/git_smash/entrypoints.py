@@ -102,9 +102,10 @@ class Smash:
         return merges
 
     def list(self):
+        merges = self.get_merges()
+
         self.logger.info('merges:')
 
-        merges = self.get_merges()
         for merge in merges:
             self.logger.info(f'\t{merge}')
 
@@ -117,7 +118,7 @@ class Smash:
         on_base = self.base_rev == self.master_rev
         if not on_base:
             # TODO: rebase on base branch based on optional arg
-            self.logger.warning(f'WARNING: this branch is not on top of {self.base_branch}')
+            self.logger.warning(f'this branch is not on top of {self.base_branch}')
 
         self.logger.info('find merge commits:')
 
