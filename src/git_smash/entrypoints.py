@@ -43,6 +43,31 @@ class Smash:
         self.args = args
         self.base_branch = base_branch
 
+    def apply_branch(self, branch, merge_commit=None):
+        """Attempt to merge the found branch,  name or fallback to the merge commit"""
+        for action in ('merge_branch', 'merge_merge'):
+            if action == 'merge_branch':
+                with git.temp_branch(merge_commit.merge_branch, branch.commit) as _branch:
+                    self.logger.info(f'merging {_branch.name}')
+                    try:
+                        run_command(f'{git.GIT_MERGE_COMMAND} {_branch.name}')
+                    except SH_ERROR_1 as exc:
+                        self.logger.warning(f'merging {_branch} failed')
+                        run_command('git reset --hard')
+                    else:
+                        break
+            elif action == 'merge_merge':
+                self.logger.warning(f'attempting to merge the merge commit')
+
+                with git.temp_branch(merge_commit.merge_branch, merge_commit) as merge_branch:
+                    try:
+                        run_command(f'{git.GIT_MERGE_COMMAND} {merge_branch.name}')
+                    except SH_ERROR_1 as exc:
+                        self.logger.error(f'could not merge {merge_branch} automatically.  launching a subshell so you can resove the conflict')
+                        self.logger.error(f'once the conflict is resolved exit the shell')
+
+                        sh.bash('-i', _fg=True)
+
     @property
     def base_rev(self) -> str:
         """Returns the revison that is common with origin/master"""
@@ -94,30 +119,29 @@ class Smash:
             # TODO: rebase on base branch based on optional arg
             self.logger.warning(f'WARNING: this branch is not on top of {self.base_branch}')
 
-        simplified = self.get_merges()
+        self.logger.info('find merge commits:')
 
-        self.logger.info('find current commits:')
+        commits = self.get_merges()
 
         branch_manager = git.get_branch_manager()
-
         current_branch = branch_manager.current_branch
 
         branches_to_merge = []
 
-        for commit in simplified:
+        for commit in commits:
+            # skip trying to merge the current branch
             if commit.merge_branch == current_branch.name:
                 self.logger.info(f'{commit.merge_branch} merging self; skipping')
 
                 continue
 
             branches = branch_manager.get_matching_branches(re.compile(fr'{commit.merge_branch}$'), best=True)
-
             if not branches:
                 self.logger.warning(f'cannot find commit on any remote, making a temp branch: {commit}')
 
                 branches.append(git.create_branch(f'smash/{commit.merge_branch}', commit.merge_rhs))
 
-            branches_to_merge.append(branches[0])
+            branches_to_merge.append((commit, branches[0]))
 
         # apply the branches backwards
         branches_to_merge.reverse()
@@ -137,7 +161,7 @@ class Smash:
         run_command(f'git checkout -')
         run_command(f'git reset --hard {base}')
 
-        for branch in branches_to_merge:
+        for commit, branch in branches_to_merge:
             # get the entire commit history and see if the rev about to be merged
             # is already in the history
             branch_commits = run_command(f'git rev-list HEAD').splitlines()
@@ -150,11 +174,4 @@ class Smash:
 
                 continue
 
-            try:
-                self.logger.info(f'merging {branch.name}')
-                run_command(f'{git.GIT_MERGE_COMMAND} {branch.name}')
-            except SH_ERROR_1 as exc:
-                self.logger.error(f'could not merge {branch} automatically.  launching a subshell so you can resove the conflict')
-                self.logger.error(f'once the conflict is resolved exit the shell')
-
-                sh.bash('-i', _fg=True)
+            self.apply_branch(branch, merge_commit=commit)
