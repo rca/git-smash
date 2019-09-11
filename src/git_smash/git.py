@@ -63,7 +63,7 @@ class Branch:
     def info(self):
         current = '*' if self.current else ''
 
-        return f'{current}{self.name} @ {self.commit}'
+        return f'{self.commit} @ {current}{self.name}'
 
     def reset_to(self, commit):
         """Reset the branch to the given commit"""
