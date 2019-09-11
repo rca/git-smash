@@ -43,6 +43,13 @@ class Branch:
         """Returns the commit for this branch"""
         return Commit(run_command(f'git rev-list {self.name} --max-count 1').strip(), None)
 
+    @classmethod
+    def create(cls, name, rev):
+        run_command(f'git checkout -b {name} {rev}')
+        run_command('git checkout -')
+
+        return cls(name)
+
     @property
     def info(self):
         current = '*' if self.current else ''
@@ -171,10 +178,7 @@ class Commit:
 
 
 def create_branch(name: str, rev: str) -> Branch:
-    run_command(f'git checkout -b {name} {rev}')
-    run_command('git checkout -')
-
-    return Branch(name)
+    return Branch.create(name, rev)
 
 
 def get_branch_manager():
