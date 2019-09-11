@@ -29,9 +29,8 @@ if typing.TYPE_CHECKING:
 
 
 class Branch:
-    def __init__(self, name: str, current: bool = False, commit: 'Commit' = None):
+    def __init__(self, name: str, commit: 'Commit' = None):
         self.name = name
-        self.current = current
 
         self._commit = commit
 
@@ -43,8 +42,6 @@ class Branch:
 
     def checkout(self):
         run_command(f'git checkout {self.name}')
-
-        self.current = True
 
     @property
     def commit(self):
@@ -60,6 +57,11 @@ class Branch:
         run_command('git checkout -')
 
         return cls(name)
+
+    @property
+    def current(self):
+        """Returns whether this branch is the one currently on"""
+        return BranchManager.get_current_branch() == self.name
 
     def delete(self):
         run_command(f'git branch -D {self.name}')
@@ -90,21 +92,23 @@ class BranchManager:
     def __init__(self):
         self.branches = []
 
-    @property
-    def current_branch(self):
-        for item in self.branches:
-            if item.current:
-                return item
+    @classmethod
+    def get_current_branch(cls):
+        for line in run_command(GIT_BRANCH_COMMAND).splitlines():
+            line = line.strip()
+
+            if line.startswith('*'):
+                name = line[2:]
+                return name
         else:
-            raise errors.BranchError('Unable to find current branch')
+            raise errors.BranchError('Could not find current branch')
 
     @classmethod
     def from_git_output(cls, content: str) -> 'BranchManager':
         manager = cls()
 
         for line in content.splitlines():
-            current = line[0] == '*'
-            manager.branches.append(Branch(line[2:], current=current))
+            manager.branches.append(Branch(line[2:]))
 
         return manager
 
