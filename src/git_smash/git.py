@@ -29,9 +29,11 @@ if typing.TYPE_CHECKING:
 
 
 class Branch:
-    def __init__(self, name: str, current: bool = False):
+    def __init__(self, name: str, current: bool = False, commit: 'Commit' = None):
         self.name = name
         self.current = current
+
+        self._commit = commit
 
     def __repr__(self):
         return f'<{self.__class__.__name__} {self.info}>'
@@ -47,6 +49,9 @@ class Branch:
     @property
     def commit(self):
         """Returns the commit for this branch"""
+        if self._commit:
+            return self._commit
+
         return Commit(run_command(f'git rev-list {self.name} --max-count 1').strip(), None)
 
     @classmethod
