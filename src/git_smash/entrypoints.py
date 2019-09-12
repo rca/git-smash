@@ -7,9 +7,7 @@ import sys
 from collections import OrderedDict
 
 from . import git
-from .utils import run_command
-
-SH_ERROR_1 = getattr(sh, 'ErrorReturnCode_1')
+from .utils import SH_ERROR_1, run_command, run_command_with_interactive_fallback, run_interactive_shell
 
 
 def git_smash():
@@ -46,7 +44,7 @@ class Smash:
 
     def apply_branch(self, branch, merge_commit=None):
         """Attempt to merge the found branch,  name or fallback to the merge commit"""
-        for action in ('merge_branch', 'merge_merge'):
+        for idx, action in enumerate(('merge_branch', 'merge_merge', 'merge_branch')):
             # get the entire commit history and see if the rev about to be merged
             # is already in the history
             branch_commits = run_command(f'git rev-list HEAD').splitlines()
@@ -64,21 +62,35 @@ class Smash:
                     try:
                         run_command(f'{git.GIT_MERGE_COMMAND} {_branch}')
                     except SH_ERROR_1 as exc:
-                        self.logger.warning(f'merging {_branch} failed')
-                        run_command('git reset --hard')
+                        self.logger.warning(f'merging {_branch.info} failed')
+
+                        if idx == 0:
+                            run_command('git reset --hard')
+                        else:
+                            run_interactive_shell('launching a subshell.  fix the conflict, but do not commit.  exit when done')
+
+                            run_command(f'{git.GIT_COMMAND} add --all')
+                            run_command(git.GIT_COMMIT_COMMAND)
                     else:
                         break
             elif action == 'merge_merge':
-                self.logger.warning(f'attempting to merge the merge commit')
-
                 with git.temp_branch(merge_commit.merge_branch, merge_commit) as merge_branch:
-                    try:
-                        run_command(f'{git.GIT_MERGE_COMMAND} {merge_branch}')
-                    except SH_ERROR_1 as exc:
-                        self.logger.error(f'could not merge {merge_branch} automatically.  launching a subshell so you can resove the conflict')
-                        self.logger.error(f'once the conflict is resolved exit the shell')
+                    self.logger.info(f'merging the merge commit: {merge_branch.info}')
 
-                        sh.bash('-i', _fg=True)
+                    run_command_with_interactive_fallback(
+                        f'{git.GIT_MERGE_COMMAND} {merge_branch}',
+                        message='launching a subshell so you can resove the conflict'
+                    )
+            elif action == 'cherry_pick_local':
+                # perform a cherry pick on the
+                self.logger.info(f'cherry picking after merging merge')
+
+                run_command_with_interactive_fallback(
+                    f'{git.GIT_CHERRY_PICK_COMMAND} {merge_branch}',
+                    message='launching a subshell so you can resove the conflict'
+                )
+
+                run_command(f'{git.GIT_COMMIT_AMEND_COMMAND}')
 
     @property
     def base_rev(self) -> str:
