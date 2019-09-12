@@ -172,13 +172,15 @@ class Smash:
                     self.clean()
                 else:
                     raise
+            else:
+                # switch back out of backup_branch
+                run_command(f'git checkout -')
 
         base = git.Branch(self.base_branch_name)
 
         current_branch = branch_manager.get_current_branch()
         self.logger.info(f'resetting {current_branch} to {base.info}')
 
-        run_command(f'git checkout -')
         run_command(f'git reset --hard {base}')
 
         for commit, branch in branches_to_merge:
