@@ -9,9 +9,16 @@ Having a single source of truth is nice.  In Version Control, that's the main br
 
 When working on a team, there are multiple devlopers typically working on different features.  For instance, while one dev is working on the public access feature, another is working on some other task, like `bugfix/cant-see-profile`.
 
-Things start to get tricky when multiple developers need to use a shared resource, such as a development environment that the entire team can access.  Since these are features in development, the branches themselves are still in flux.  But they still need to be put somewhere to deploy.  This can be an ephemeral branch that itself never gets merged into master, but is simply the placeholder -- the mixing pot -- to deploy and verify changes.  Once feature branches are approved and merged into `master`, devs also need a way to clean out this branch, as well as bringing it up to date with the new `master` without adversely affecting what other devs may have put in that branch.
+Things start to get tricky when multiple developers need to use a shared resource, such as a development environment that the entire team can access.  Since these are features in development, the branches themselves are still in flux.  But they still need to be put somewhere to deploy.  This can be an ephemeral branch, say `env/dev` that itself never gets merged into master, but is simply the placeholder -- the mixing pot -- to deploy and verify multiple changes simultaneously.  Once feature branches are approved and merged into `master`, devs also need a way to clean out this branch, as well as bringing it up to date with the new `master` without adversely affecting what other devs may have put in that branch.
 
 This is what `git-smash` is intended to help with.
+
+
+## The one rule: No Fast Forward
+
+In ephemeral branches like `env/dev`, features are to always be merged in with `git merge --no-ff`* .  This is because `git-smash` has to have some way to find what has been merged in; it uses the merge commits for this purpose.
+
+\* and in my opinion merges should always drop a merge node; if you aren't looking for a merge node, don't merge, that's what `rebase` is for.
 
 
 ## An example
