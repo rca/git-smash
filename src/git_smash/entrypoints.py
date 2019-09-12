@@ -42,16 +42,16 @@ def git_smash():
 class Smash:
     def __init__(self, args, base_branch: str = 'origin/master'):
         self.args = args
-        self.base_branch = base_branch
+        self.base_branch_name = base_branch
 
     def apply_branch(self, branch, merge_commit=None):
         """Attempt to merge the found branch,  name or fallback to the merge commit"""
         for action in ('merge_branch', 'merge_merge'):
             if action == 'merge_branch':
                 with git.temp_branch(merge_commit.merge_branch, branch.commit) as _branch:
-                    self.logger.info(f'merging {_branch.name}')
+                    self.logger.info(f'merging {_branch.info}')
                     try:
-                        run_command(f'{git.GIT_MERGE_COMMAND} {_branch.name}')
+                        run_command(f'{git.GIT_MERGE_COMMAND} {_branch}')
                     except SH_ERROR_1 as exc:
                         self.logger.warning(f'merging {_branch} failed')
                         run_command('git reset --hard')
@@ -62,7 +62,7 @@ class Smash:
 
                 with git.temp_branch(merge_commit.merge_branch, merge_commit) as merge_branch:
                     try:
-                        run_command(f'{git.GIT_MERGE_COMMAND} {merge_branch.name}')
+                        run_command(f'{git.GIT_MERGE_COMMAND} {merge_branch}')
                     except SH_ERROR_1 as exc:
                         self.logger.error(f'could not merge {merge_branch} automatically.  launching a subshell so you can resove the conflict')
                         self.logger.error(f'once the conflict is resolved exit the shell')
@@ -72,7 +72,7 @@ class Smash:
     @property
     def base_rev(self) -> str:
         """Returns the revison that is common with origin/master"""
-        return run_command(f'git merge-base HEAD {self.base_branch}')
+        return run_command(f'git merge-base HEAD {self.base_branch_name}')
 
     def clean(self):
         """
@@ -113,13 +113,13 @@ class Smash:
     @property
     def master_rev(self):
         """Returns the master revison"""
-        return run_command(f'git rev-list {self.base_branch} --max-count 1')
+        return run_command(f'git rev-list {self.base_branch_name} --max-count 1')
 
     def replay(self):
         on_base = self.base_rev == self.master_rev
         if not on_base:
             # TODO: rebase on base branch based on optional arg
-            self.logger.warning(f'this branch is not on top of {self.base_branch}')
+            self.logger.warning(f'this branch is not on top of {self.base_branch_name}')
 
         self.logger.info('find merge commits:')
 
@@ -173,9 +173,10 @@ class Smash:
                 else:
                     raise
 
-        base = self.base_branch
+        base = git.Branch(self.base_branch_name)
 
-        self.logger.info(f'resetting to {base}')
+        current_branch = branch_manager.get_current_branch()
+        self.logger.info(f'resetting {current_branch} to {base.info}')
 
         run_command(f'git checkout -')
         run_command(f'git reset --hard {base}')
