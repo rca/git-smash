@@ -47,6 +47,17 @@ class Smash:
     def apply_branch(self, branch, merge_commit=None):
         """Attempt to merge the found branch,  name or fallback to the merge commit"""
         for action in ('merge_branch', 'merge_merge'):
+            # get the entire commit history and see if the rev about to be merged
+            # is already in the history
+            branch_commits = run_command(f'git rev-list HEAD').splitlines()
+
+            rev = branch.commit.rev
+            if rev in branch_commits:
+                if idx == 0:
+                    self.logger.info(f'rev={rev} from {branch} already in commit history, skipping')
+
+                break
+
             if action == 'merge_branch':
                 with git.temp_branch(merge_commit.merge_branch, branch.commit) as _branch:
                     self.logger.info(f'merging {_branch.info}')
@@ -186,16 +197,4 @@ class Smash:
         run_command(f'git reset --hard {base}')
 
         for commit, branch in branches_to_merge:
-            # get the entire commit history and see if the rev about to be merged
-            # is already in the history
-            branch_commits = run_command(f'git rev-list HEAD').splitlines()
-            rev = branch.commit.rev
-
-            # print(f'branch={branch}, rev={rev}, {len(branch_commits)} branch_commits={branch_commits}')
-
-            if rev in branch_commits:
-                self.logger.info(f'rev={rev} from {branch} already in commit history, skipping')
-
-                continue
-
             self.apply_branch(branch, merge_commit=commit)
