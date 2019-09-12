@@ -61,7 +61,7 @@ class Branch:
     @property
     def current(self):
         """Returns whether this branch is the one currently on"""
-        return BranchManager.get_current_branch() == self.name
+        return BranchManager.get_current_branch().name == self.name
 
     def delete(self):
         run_command(f'git branch -D {self.name}')
@@ -99,7 +99,7 @@ class BranchManager:
 
             if line.startswith('*'):
                 name = line[2:]
-                return name
+                return Branch(name)
         else:
             raise errors.BranchError('Could not find current branch')
 
@@ -278,7 +278,7 @@ def temp_branch(name, commit):
     logger = logging.getLogger(__name__)
 
     branch_manager = get_branch_manager()
-    current_branch = branch_manager.current_branch
+    current_branch = branch_manager.get_current_branch()
     original_commit = None
 
     try:

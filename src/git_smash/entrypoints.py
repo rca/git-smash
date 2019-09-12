@@ -125,7 +125,7 @@ class Smash:
         commits = self.get_merges()
 
         branch_manager = git.get_branch_manager()
-        current_branch = branch_manager.current_branch
+        current_branch = branch_manager.get_current_branch()
 
         branches_to_merge = []
 
