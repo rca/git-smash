@@ -13,6 +13,9 @@ from .utils import get_proc, run_command
 GIT_COMMAND = 'git --no-pager'
 
 GIT_BRANCH_COMMAND = f'{GIT_COMMAND} branch --no-color --all'
+GIT_CHERRY_PICK_COMMAND = f'{GIT_COMMAND} cherry-pick --no-commit'
+GIT_COMMIT_COMMAND = f'{GIT_COMMAND} commit -C HEAD'
+GIT_COMMIT_AMEND_COMMAND = f'{GIT_COMMAND} commit --amend -C HEAD'
 GIT_LOG_COMMAND = f'{GIT_COMMAND} log --no-decorate --no-color --pretty=oneline --merges'
 GIT_MERGE_COMMAND = f'{GIT_COMMAND} merge --no-edit'
 
