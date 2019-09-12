@@ -16,6 +16,7 @@ def git_smash():
     parser = argparse.ArgumentParser()
 
     parser.add_argument('-l', '--loglevel', default='info', help='log level, default=info')
+    parser.add_argument('--clean', action='store_true', help='automatically clean the backup smash branch')
     parser.add_argument('--drop', action='append', help='drop the given branches')
     parser.add_argument('--reset-base', action='store_true', help='reset the branch to the base branch')
     parser.add_argument('action', help='the action to take')
@@ -153,9 +154,24 @@ class Smash:
         self.logger.info(f'branches to merge:\n\t{branches_s}')
 
         backup_branch = f'smash/{current_branch}'
-        self.logger.info(f'backing up current branch to {backup_branch}')
 
-        run_command(f'git checkout -b {backup_branch}')
+        clean = None
+        for i in range(2):
+            if not clean:  # write this just once
+                self.logger.info(f'backing up current branch to {backup_branch}')
+
+            try:
+                run_command(f'git checkout -b {backup_branch}')
+            except sh.ErrorReturnCode_128:
+                clean = self.args.clean
+                if not clean:
+                    var = input(f'{backup_branch} already exists; remove it? [Y|n]: ').strip()
+                    clean = var.lower() in ('', 'y')
+
+                if clean:
+                    self.clean()
+                else:
+                    raise
 
         base = self.base_branch
 
