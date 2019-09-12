@@ -176,6 +176,8 @@ class Smash:
                 # switch back out of backup_branch
                 run_command(f'git checkout -')
 
+                break
+
         base = git.Branch(self.base_branch_name)
 
         current_branch = branch_manager.get_current_branch()
