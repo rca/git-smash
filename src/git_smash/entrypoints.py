@@ -23,7 +23,7 @@ def git_smash():
     # drop sh logging
     logger = logging.getLogger('sh').setLevel(logging.WARNING)
 
-    smash = Smash(args)
+    smash = Smash(clean_backups=args.clean, drop_branches=args.drop)
 
     fn = getattr(smash, args.action, None)
     if not fn:

@@ -1,5 +1,7 @@
 import logging
 import re
+from typing import List
+
 import sh
 
 from . import git
@@ -7,9 +9,10 @@ from .utils import SH_ERROR_1, run_command, run_command_with_interactive_fallbac
 
 
 class Smash:
-    def __init__(self, args, base_branch: str = 'origin/master'):
-        self.args = args
+    def __init__(self, clean_backups: bool = True, drop_branches: List[str] = None, base_branch: str = 'origin/master'):
         self.base_branch_name = base_branch
+        self.clean_backups = clean_backups
+        self.drop_branches = drop_branches
 
     def apply_branch(self, branch, merge_commit=None):
         """Attempt to merge the found branch,  name or fallback to the merge commit"""
@@ -84,7 +87,7 @@ class Smash:
     def get_merges(self, simplify: bool = True) -> list:
         self.logger.info(f'looking for merge commits until {self.base_rev}')
 
-        merges = git.get_merge_commits(self.base_rev, drop=self.args.drop)
+        merges = git.get_merge_commits(self.base_rev, drop=self.drop_branches)
         self.logger.debug('all merges:')
         for merge in merges:
             self.logger.debug(f'\t{merge}')
@@ -155,7 +158,7 @@ class Smash:
             try:
                 run_command(f'git checkout -b {backup_branch}')
             except sh.ErrorReturnCode_128:
-                clean = self.args.clean
+                clean = self.clean_backups
                 if not clean:
                     var = input(f'{backup_branch} already exists; remove it? [Y|n]: ').strip()
                     clean = var.lower() in ('', 'y')
