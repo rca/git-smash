@@ -18,11 +18,13 @@ class Smash:
         self,
         clean_backups: bool = True,
         drop_branches: List[str] = None,
+        push: bool = False,
         base_branch: str = "origin/master",
     ):
         self.base_branch_name = base_branch
         self.clean_backups = clean_backups
         self.drop_branches = drop_branches
+        self.push = push  # whether to push upstream
 
     def apply_branch(self, branch, merge_commit=None):
         """Attempt to merge the found branch,  name or fallback to the merge commit"""
