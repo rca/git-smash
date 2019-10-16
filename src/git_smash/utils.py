@@ -14,10 +14,10 @@ def get_proc(command: str, **kwargs):
     return sh_command(*command_split[1:], **kwargs)
 
 
-def run_command(command: str) -> str:
-    proc = get_proc(command)
-
-    return proc.stdout.decode("utf8").strip()
+def run_command(command: str, **kwargs) -> str:
+    proc = get_proc(command, **kwargs)
+    if proc:
+        return proc.stdout.decode("utf8").strip()
 
 
 def run_command_with_interactive_fallback(command: str, message: str = None):
