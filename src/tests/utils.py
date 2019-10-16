@@ -29,7 +29,7 @@ def get_file_path(filename):
 
         dirname = os.path.dirname(frame_filename)
 
-        path = os.path.join(dirname, 'files', filename)
+        path = os.path.join(dirname, "files", filename)
 
         if not os.path.exists(path):
             continue
