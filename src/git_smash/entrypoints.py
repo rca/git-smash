@@ -23,7 +23,7 @@ def git_smash():
     )
     parser.add_argument("action", help="the action to take")
 
-    args = parser.parse_args()
+    args, remainder = parser.parse_known_args()
 
     loglevel = getattr(logging, args.loglevel.upper())
     log_format = "%(levelname)s %(message)s"
@@ -38,4 +38,4 @@ def git_smash():
     if not fn:
         sys.exit(f"ERROR: action {args.action} not defined")
 
-    sys.exit(fn())
+    sys.exit(fn(*remainder))
