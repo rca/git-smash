@@ -130,6 +130,30 @@ class Smash:
         """Returns the master revison"""
         return run_command(f"git rev-list {self.base_branch_name} --max-count 1")
 
+    def put(self, *args):
+        # when only one path is given, the arg is the destination branch
+        if len(args) == 1:
+            src, dest = ".", args[0]
+        else:
+            src, dest = args
+
+        if src == ".":
+            branch_manager = git.get_branch_manager()
+            src = branch_manager.get_current_branch()
+
+            self.logger.info(f"src={src}")
+
+        commands = [f"git checkout {dest}", f"git merge {src}", f"git-smash replay"]
+
+        if self.push:
+            commands.append(f"git push --force-with-lease")
+
+        commands.append(f"git checkout -")
+
+        for command in commands:
+            self.logger.info(command)
+            run_command(command, _fg=True)
+
     def replay(self):
         on_base = self.base_rev == self.master_rev
         if not on_base:
