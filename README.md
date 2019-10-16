@@ -23,6 +23,9 @@ In ephemeral branches like `env/dev`, features are to always be merged in with `
 
 ## An example
 
+
+### Listing merges
+
 Here is some broken down output of a development branch when running `git-smash -l debug list` (debug to see what's going on under the hood):
 
 Run the program:
@@ -75,6 +78,9 @@ INFO 	5eaa71173c114ea826909124c628ff435659ba96 Merge branch 'feature/1031' into 
 INFO 	c073b813b78202b8647eb1c514ca48837a87cd4e Merge branch 'feature/update-rows' into env/dev-ad-api
 INFO 	248efcf99b96eaf2a7f667c5ce94162ef632d1e3 Merge branch 'feature/public-access' into env/dev-ad-api
 ```
+
+
+### Replaying
 
 This is already looking much cleaner than before.  Now, the magic; replaying the cleaned up list.  Breaking down the `git-smash replay` command, as before it finds where to begin:
 
@@ -138,3 +144,35 @@ c5fdfe29a1d4acf0de02dc1d2fedfac9f195302d Merge branch 'feature/public-access' in
 ```
 
 Replaying multiple times will result in the same content, however git will re-generate commit hashes.
+
+
+## Putting Feature branches
+
+When working on a feature branch the `put` command can be used to apply it to an ephemeral branch.  For instance, starting with an ephemeral branch containing ponies and unicorns:
+
+```
+[0][~/Projects/thing(feature/th-1234-unicorns:aea2079)]
+$ git-smash put env/dev-thing
+INFO src=feature/th-1234-unicorns
+INFO git checkout env/dev-thing
+Switched to branch 'env/dev-thing'
+INFO git merge feature/th-1234-unicorns
+Already up to date.
+INFO git-smash replay
+INFO find merge commits:
+INFO looking for merge commits until df3ebc54c13ec5bcd3e78c338abc06434eb653c1
+INFO branches to merge:
+	348909114a586b43d0904accb26ecf76fa7d723f @ experiments/ponies
+	aea20795f5e60a1018460a13f69ae170ac5c83b0 @ feature/th-1234-unicorns
+INFO backing up current branch to smash/env/dev-thing
+smash/env/dev-thing already exists; remove it? [Y|n]: y
+INFO remove 8e97ffc647a8f219d1565804f42ffcf99d09a932 @ smash/env/dev-thing
+INFO resetting env/dev-thing to df3ebc54c13ec5bcd3e78c338abc06434eb653c1 @ origin/master
+INFO merging 348909114a586b43d0904accb26ecf76fa7d723f @ experiments/ponies
+INFO merging aea20795f5e60a1018460a13f69ae170ac5c83b0 @ feature/th-1234-unicorns
+INFO git checkout -
+Switched to branch 'feature/th-1234-unicorns'
+Your branch is up to date with 'rca/feature/th-1234-unicorns'.
+```
+
+Additionally, `--push` can be added to automatically push a successful replay upstream.
