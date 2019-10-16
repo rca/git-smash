@@ -2,13 +2,13 @@
 import configparser
 from setuptools import find_packages, setup
 
-SRC_PREFIX = 'src'
+SRC_PREFIX = "src"
 
 packages = find_packages(SRC_PREFIX)
 
 
 def readme():
-    with open('README.md') as f:
+    with open("README.md") as f:
         return f.read()
 
 
@@ -23,28 +23,24 @@ def get_required_packages():
     install_requires = []
 
     config = configparser.ConfigParser()
-    config.read('Pipfile')
+    config.read("Pipfile")
 
-    install_requires = sorted([x for x in config['packages']])
+    install_requires = sorted([x for x in config["packages"]])
 
     return install_requires
 
 
 setup(
-    name='git-smash',
-    url='https://github.com/openslate/git-smash',
-    author='OpenSlate',
-    author_email='code@openslate.com',
-    version='0.0.0',
-    description='smash multiple feature branches into an ephemeral branch',
+    name="git-smash",
+    url="https://github.com/openslate/git-smash",
+    author="OpenSlate",
+    author_email="code@openslate.com",
+    version="0.0.0",
+    description="smash multiple feature branches into an ephemeral branch",
     long_description=readme(),
-    long_description_content_type='text/markdown',
-    package_dir={'': 'src'},
+    long_description_content_type="text/markdown",
+    package_dir={"": "src"},
     packages=packages,
-    entry_points={
-        'console_scripts': [
-            'git-smash = git_smash.entrypoints:git_smash',
-        ],
-    },
-    install_requires=get_required_packages()
+    entry_points={"console_scripts": ["git-smash = git_smash.entrypoints:git_smash"]},
+    install_requires=get_required_packages(),
 )

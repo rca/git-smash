@@ -10,41 +10,45 @@ from typing import Iterable
 from . import errors
 from .utils import get_proc, run_command
 
-GIT_COMMAND = 'git --no-pager'
+GIT_COMMAND = "git --no-pager"
 
-GIT_BRANCH_COMMAND = f'{GIT_COMMAND} branch --no-color --all'
-GIT_CHERRY_PICK_COMMAND = f'{GIT_COMMAND} cherry-pick --no-commit'
-GIT_COMMIT_COMMAND = f'{GIT_COMMAND} commit -C HEAD'
-GIT_COMMIT_AMEND_COMMAND = f'{GIT_COMMAND} commit --amend -C HEAD'
-GIT_LOG_COMMAND = f'{GIT_COMMAND} log --no-decorate --no-color --pretty=oneline --merges'
-GIT_MERGE_COMMAND = f'{GIT_COMMAND} merge --no-edit'
+GIT_BRANCH_COMMAND = f"{GIT_COMMAND} branch --no-color --all"
+GIT_CHERRY_PICK_COMMAND = f"{GIT_COMMAND} cherry-pick --no-commit"
+GIT_COMMIT_COMMAND = f"{GIT_COMMAND} commit -C HEAD"
+GIT_COMMIT_AMEND_COMMAND = f"{GIT_COMMAND} commit --amend -C HEAD"
+GIT_LOG_COMMAND = (
+    f"{GIT_COMMAND} log --no-decorate --no-color --pretty=oneline --merges"
+)
+GIT_MERGE_COMMAND = f"{GIT_COMMAND} merge --no-edit"
 
-MERGE_MESSAGE_RE = re.compile((
-    r'(?P<decoration>\(.*\) )?'
-    r'('
-    r'Merge (:?remote-tracking )?branch \'(?P<merge_branch>[^\']*)\'( of.*)? into (?P<target_branch>.*)' \
-    r'|Merge pull request .*? from (?P<merge_branch2>.*)'
-    r')'
-))
+MERGE_MESSAGE_RE = re.compile(
+    (
+        r"(?P<decoration>\(.*\) )?"
+        r"("
+        r"Merge (:?remote-tracking )?branch \'(?P<merge_branch>[^\']*)\'( of.*)? into (?P<target_branch>.*)"
+        r"|Merge pull request .*? from (?P<merge_branch2>.*)"
+        r")"
+    )
+)
 
 if typing.TYPE_CHECKING:
-    REGEX = type(re.compile('x'))
+    REGEX = type(re.compile("x"))
 
 
 class Branch:
-    def __init__(self, name: str, commit: 'Commit' = None):
+    def __init__(self, name: str, commit: "Commit" = None):
         self.name = name
 
         self._commit = commit
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} {self.info}>'
+        return f"<{self.__class__.__name__} {self.info}>"
 
     def __str__(self):
         return str(self.name)
 
     def checkout(self):
-        run_command(f'git checkout {self.name}')
+        run_command(f"git checkout {self.name}")
 
     @property
     def commit(self):
@@ -52,12 +56,14 @@ class Branch:
         if self._commit:
             return self._commit
 
-        return Commit(run_command(f'git rev-list {self.name} --max-count 1').strip(), None)
+        return Commit(
+            run_command(f"git rev-list {self.name} --max-count 1").strip(), None
+        )
 
     @classmethod
     def create(cls, name, rev):
-        run_command(f'git checkout -b {name} {rev}')
-        run_command('git checkout -')
+        run_command(f"git checkout -b {name} {rev}")
+        run_command("git checkout -")
 
         return cls(name)
 
@@ -67,19 +73,19 @@ class Branch:
         return BranchManager.get_current_branch().name == self.name
 
     def delete(self):
-        run_command(f'git branch -D {self.name}')
+        run_command(f"git branch -D {self.name}")
 
     @property
     def info(self):
-        current = '*' if self.current else ''
+        current = "*" if self.current else ""
 
-        return f'{self.commit} @ {current}{self.name}'
+        return f"{self.commit} @ {current}{self.name}"
 
     def reset_to(self, commit):
         """Reset the branch to the given commit"""
         self.switch(self.name)
-        run_command(f'git reset --hard {commit.rev}')
-        self.switch('-')
+        run_command(f"git reset --hard {commit.rev}")
+        self.switch("-")
 
     @classmethod
     def switch(cls, name: str):
@@ -100,14 +106,14 @@ class BranchManager:
         for line in run_command(GIT_BRANCH_COMMAND).splitlines():
             line = line.strip()
 
-            if line.startswith('*'):
+            if line.startswith("*"):
                 name = line[2:]
                 return Branch(name)
         else:
-            raise errors.BranchError('Could not find current branch')
+            raise errors.BranchError("Could not find current branch")
 
     @classmethod
-    def from_git_output(cls, content: str) -> 'BranchManager':
+    def from_git_output(cls, content: str) -> "BranchManager":
         manager = cls()
 
         for line in content.splitlines():
@@ -116,9 +122,9 @@ class BranchManager:
         return manager
 
     def get_branch(self, name: str):
-        return self.get_matching_branches(re.compile('^master$'), best=True)[0]
+        return self.get_matching_branches(re.compile("^master$"), best=True)[0]
 
-    def get_matching_branches(self, regex: 'REGEX', best: bool = False) -> Iterable:
+    def get_matching_branches(self, regex: "REGEX", best: bool = False) -> Iterable:
         """
         Returns a list of remote branches that match the given name
 
@@ -151,7 +157,7 @@ class BranchManager:
 
         # when best is selected, make sure at most one result is being returned
         if best:
-            assert len(matching) < 2, f'{len(matching)}: {matching}'
+            assert len(matching) < 2, f"{len(matching)}: {matching}"
 
         return matching
 
@@ -169,15 +175,15 @@ class Commit:
         self.message = message
 
     def __repr__(self):
-        return f'<{self.__class__.__name__} {self}>'
+        return f"<{self.__class__.__name__} {self}>"
 
     def __str__(self):
-        message = f' {self.message}' if self.message else ''
+        message = f" {self.message}" if self.message else ""
 
-        return f'{self.rev}{message}'
+        return f"{self.rev}{message}"
 
     @classmethod
-    def from_log(cls, content: str) -> 'Commit':
+    def from_log(cls, content: str) -> "Commit":
         """
         Returns a Commit instance from the given log line
 
@@ -189,7 +195,7 @@ class Commit:
         commits = []
 
         for line in content.splitlines():
-            rev, message = line.strip().split(' ', 1)
+            rev, message = line.strip().split(" ", 1)
 
             commits.append(cls(rev, message))
 
@@ -199,13 +205,13 @@ class Commit:
     def merge_branch(self):
         matches = MERGE_MESSAGE_RE.match(self.message)
         if matches:
-            return matches.group('merge_branch') or matches.group('merge_branch2')
+            return matches.group("merge_branch") or matches.group("merge_branch2")
         else:
-            print(f'could not parse {self.message}')
+            print(f"could not parse {self.message}")
 
     @property
     def merge_commits(self):
-        return run_command(f'{GIT_LOG_COMMAND} --pretty=%P -n 1 {self.rev}').split()
+        return run_command(f"{GIT_LOG_COMMAND} --pretty=%P -n 1 {self.rev}").split()
 
     @property
     def merge_lhs(self):
@@ -224,33 +230,37 @@ def get_branch_manager():
     return BranchManager.from_git_output(run_command(GIT_BRANCH_COMMAND))
 
 
-def get_merge_commits(until: str, drop: Iterable[str] = None, loglevel: str = 'debug') -> list:
+def get_merge_commits(
+    until: str, drop: Iterable[str] = None, loglevel: str = "debug"
+) -> list:
     """
     Returns merge commits until the given revision is found
     """
-    logger = logging.getLogger(f'{__name__}')
+    logger = logging.getLogger(f"{__name__}")
     logger_fn = getattr(logger, loglevel)
 
     merge_commits_t = []
 
-    git_log_command = f'{GIT_LOG_COMMAND} {until}..HEAD'
-    get_proc(git_log_command, _out=functools.partial(process_merge_line, merge_commits_t))
+    git_log_command = f"{GIT_LOG_COMMAND} {until}..HEAD"
+    get_proc(
+        git_log_command, _out=functools.partial(process_merge_line, merge_commits_t)
+    )
 
     drop = drop or []
     merge_commits = []
     for commit in merge_commits_t:
         if commit.merge_branch in drop:
-            logger_fn(f'dropping {commit}')
+            logger_fn(f"dropping {commit}")
             continue
 
-        logger_fn(f'found {commit.merge_branch} @ {commit.rev}')
+        logger_fn(f"found {commit.merge_branch} @ {commit.rev}")
         merge_commits.append(commit)
 
     return merge_commits
 
 
-def get_simplified_merge_commits(commits: Iterable[Commit], loglevel: str = 'debug'):
-    logger = logging.getLogger(f'{__name__}')
+def get_simplified_merge_commits(commits: Iterable[Commit], loglevel: str = "debug"):
+    logger = logging.getLogger(f"{__name__}")
     logger_fn = getattr(logger, loglevel)
 
     commits_by_message = OrderedDict()
@@ -258,7 +268,7 @@ def get_simplified_merge_commits(commits: Iterable[Commit], loglevel: str = 'deb
     for commit in commits:
         branch_name = commit.merge_branch
         if branch_name not in commits_by_message:
-            logger_fn(f'add branch_name={branch_name} @ {commit.rev}')
+            logger_fn(f"add branch_name={branch_name} @ {commit.rev}")
 
             commits_by_message[branch_name] = commit
 
@@ -289,12 +299,12 @@ def temp_branch(name, commit):
     except sh.ErrorReturnCode:  # branch does not exist
         branch = Branch.create(name, commit.rev)
 
-        logger.debug(f'created {branch}')
+        logger.debug(f"created {branch}")
     else:
         original_commit = branch.commit
         branch.reset_to(commit)
 
-        logger.debug(f'switched to {branch}, original_commit={original_commit}')
+        logger.debug(f"switched to {branch}, original_commit={original_commit}")
 
     current_branch.checkout()
 
@@ -302,11 +312,11 @@ def temp_branch(name, commit):
         yield branch
     finally:
         if original_commit:
-            logger.debug(f'resetting to {original_commit}')
+            logger.debug(f"resetting to {original_commit}")
 
             branch.reset_to(original_commit)
         else:
-            logger.debug(f'remove {branch}')
+            logger.debug(f"remove {branch}")
 
             original_branch.checkout()
             branch.delete()
