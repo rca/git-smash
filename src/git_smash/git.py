@@ -308,7 +308,7 @@ def temp_branch(name, commit):
 
         logger.debug(f"switched to {branch}, original_commit={original_commit}")
 
-    current_branch.checkout()
+        current_branch.checkout()
 
     try:
         yield branch
