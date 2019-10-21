@@ -320,5 +320,4 @@ def temp_branch(name, commit):
         else:
             logger.debug(f"remove {branch}")
 
-            original_branch.checkout()
             branch.delete()
