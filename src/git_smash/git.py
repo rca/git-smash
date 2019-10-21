@@ -7,6 +7,8 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from typing import Iterable
 
+import sh
+
 from . import errors
 from .utils import get_proc, run_command
 
