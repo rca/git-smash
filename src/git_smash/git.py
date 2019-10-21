@@ -7,6 +7,8 @@ from collections import OrderedDict
 from contextlib import contextmanager
 from typing import Iterable
 
+import sh
+
 from . import errors
 from .utils import get_proc, run_command
 
@@ -306,7 +308,7 @@ def temp_branch(name, commit):
 
         logger.debug(f"switched to {branch}, original_commit={original_commit}")
 
-    current_branch.checkout()
+        current_branch.checkout()
 
     try:
         yield branch
@@ -318,5 +320,4 @@ def temp_branch(name, commit):
         else:
             logger.debug(f"remove {branch}")
 
-            original_branch.checkout()
             branch.delete()
