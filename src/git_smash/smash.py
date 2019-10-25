@@ -182,10 +182,12 @@ class Smash:
             try:
                 run_command(f"git checkout -b {backup_branch}")
             except sh.ErrorReturnCode_128:
+                branch = branch_manager.get_branch(backup_branch)
+
                 clean = self.clean_backups
                 if not clean:
                     var = input(
-                        f"{backup_branch} already exists; remove it? [Y|n]: "
+                        f"{branch.info} already exists; remove it? [Y|n]: "
                     ).strip()
                     clean = var.lower() in ("", "y")
 
