@@ -126,7 +126,9 @@ class BranchManager:
     def get_branch(self, name: str):
         return self.get_matching_branches(re.compile(fr"^{name}$"), best=True)[0]
 
-    def get_matching_branches(self, regex: "REGEX", best: bool = False) -> Iterable:
+    def get_matching_branches(
+        self, regex: "REGEX", best: bool = False
+    ) -> Iterable["Branch"]:
         """
         Returns a list of remote branches that match the given name
 
