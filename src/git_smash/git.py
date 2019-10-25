@@ -124,7 +124,7 @@ class BranchManager:
         return manager
 
     def get_branch(self, name: str):
-        return self.get_matching_branches(re.compile("^master$"), best=True)[0]
+        return self.get_matching_branches(re.compile(fr"^{name}$"), best=True)[0]
 
     def get_matching_branches(self, regex: "REGEX", best: bool = False) -> Iterable:
         """
