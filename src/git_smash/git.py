@@ -21,7 +21,7 @@ GIT_COMMIT_AMEND_COMMAND = f"{GIT_COMMAND} commit --amend -C HEAD"
 GIT_LOG_COMMAND = (
     f"{GIT_COMMAND} log --no-decorate --no-color --pretty=oneline --merges"
 )
-GIT_MERGE_COMMAND = f"{GIT_COMMAND} merge --no-edit"
+GIT_MERGE_COMMAND = f"{GIT_COMMAND} merge --no-ff --no-edit"
 
 MERGE_MESSAGE_RE = re.compile(
     (
